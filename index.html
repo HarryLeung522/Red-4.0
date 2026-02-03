@@ -6,165 +6,126 @@
     <title>Red 4.0</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fa; padding: 15px; font-family: sans-serif; }
-        .container { max-width: 500px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { color: #d9534f; font-weight: bold; text-align: center; margin-bottom: 20px; }
-        .preview-img { width: 100%; max-height: 200px; object-fit: contain; display: none; margin-top: 10px; border: 1px solid #ddd; border-radius: 8px; }
-        .form-label { font-weight: bold; margin-top: 10px; }
-        .id-badge { background: #e9ecef; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; color: #0d6efd; margin: 15px 0; }
-        #loading { display: none; text-align: center; color: #d9534f; font-weight: bold; }
+        body { background-color: #f8f9fa; padding: 15px; }
+        .card { border-radius: 15px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn-camera { background-color: #6c757d; color: white; margin-bottom: 10px; }
+        #preview { width: 100%; max-height: 200px; object-fit: contain; display: none; margin-bottom: 15px; border-radius: 10px; }
+        .num-badge { background: #fff3cd; color: #856404; padding: 8px; text-align: center; border-radius: 8px; font-weight: bold; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
-<div class="container mt-3">
-    <h2>Red 4.0</h2>
+<div class="container">
+    <h2 class="text-center my-3 fw-bold" style="color: #dc3545;">Red 4.0</h2>
+    <div class="card p-4">
+        <form id="mainForm">
+            <label class="btn btn-camera w-100 py-3">
+                📷 拍攝或選擇相片
+                <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;" required>
+            </label>
+            <img id="preview">
 
-    <form id="expenseForm">
-        <div class="mb-3">
-            <label class="form-label">📸 拍攝或選取相片</label>
-            <input type="file" class="form-control" id="photo" accept="image/*" capture="environment" required>
-            <img id="preview" class="preview-img">
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Who pay</label>
-            <select class="form-select" id="whoPay" required>
-                <option value="" disabled selected>請選擇...</option>
-                <option value="Harry Use">Harry Use</option>
-                <option value="Pi Direct payment">Pi Direct payment</option>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">類別/支付方式</label>
-            <select class="form-select" id="category" disabled required>
-                <option value="">請先選取 Who pay</option>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Type</label>
-            <select class="form-select" id="type" required>
-                <option value="Rent">Rent</option>
-                <option value="Electricity">Electricity</option>
-                <option value="Logistic">Logistic</option>
-                <option value="Teaching Material">Teaching Material</option>
-                <option value="Admin">Admin</option>
-                <option value="Assets">Assets</option>
-                <option value="Other">Other</option>
-            </select>
-        </div>
-
-        <div class="row">
-            <div class="col-6 mb-3">
-                <label class="form-label">Date</label>
-                <input type="date" class="form-control" id="date" required>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Who pay</label>
+                <select class="form-select" id="whoPay" required>
+                    <option value="" disabled selected>請選擇...</option>
+                    <option value="Harry Use">Harry Use</option>
+                    <option value="Pi Direct payment">Pi Direct payment</option>
+                </select>
             </div>
-            <div class="col-6 mb-3">
-                <label class="form-label">Amount</label>
-                <input type="number" class="form-control" id="amount" placeholder="0.00" required>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">類別 / 支付方式</label>
+                <select class="form-select" id="category" disabled required></select>
             </div>
-        </div>
 
-        <div class="mb-3">
-            <label class="form-label">Item Name</label>
-            <input type="text" class="form-control" id="itemName" placeholder="輸入項目" required>
-        </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Type</label>
+                <select class="form-select" id="type" required>
+                    <option value="Rent">Rent</option>
+                    <option value="Electricity">Electricity</option>
+                    <option value="Logistic">Logistic</option>
+                    <option value="Teaching Material">Teaching Material</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Assets">Assets</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
 
-        <div class="id-badge">
-            正在填寫第 <span id="numDisplay">--</span> 則資料
-        </div>
+            <div class="row">
+                <div class="col-6 mb-3"><label class="form-label fw-bold">Date</label><input type="date" class="form-control" id="date" required></div>
+                <div class="col-6 mb-3"><label class="form-label fw-bold">Amount</label><input type="number" step="0.01" class="form-control" id="amount" required></div>
+            </div>
 
-        <button type="submit" class="btn btn-danger w-100 py-2" id="submitBtn">傳送資料及相片</button>
-        
-        <div id="loading" class="mt-3">
-            <div class="spinner-border spinner-border-sm"></div> 正在上傳，請稍候...
-        </div>
-    </form>
+            <div class="mb-3"><label class="form-label fw-bold">Item Name</label><input type="text" class="form-control" id="itemName" required></div>
+
+            <div class="num-badge">正在填寫編號：<span id="nextId">--</span></div>
+
+            <button type="submit" id="submitBtn" class="btn btn-danger w-100 py-2 fw-bold">傳送資料</button>
+        </form>
+    </div>
 </div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzd0J4pP4Oo86Tzr6qqGHzbbtvMMPJxaDV7_oFDIGmG2MUfQeaXbtmRaz88pNYI-oOitQ/exec";
     
-    const whoPay = document.getElementById('whoPay');
-    const category = document.getElementById('category');
-    const numDisplay = document.getElementById('numDisplay');
-    const photo = document.getElementById('photo');
-    const preview = document.getElementById('preview');
-
-    // 1. 預設日期
     document.getElementById('date').valueAsDate = new Date();
 
-    // 2. 預覽圖片
-    photo.onchange = e => {
-        const [file] = photo.files;
+    document.getElementById('fileInput').onchange = e => {
+        const [file] = e.target.files;
         if (file) {
-            preview.src = URL.createObjectURL(file);
-            preview.style.display = 'block';
+            document.getElementById('preview').src = URL.createObjectURL(file);
+            document.getElementById('preview').style.display = 'block';
         }
     };
 
-    // 3. 選單連動與獲取編號
-    whoPay.onchange = async () => {
-        category.disabled = false;
-        category.innerHTML = "";
-        let opts = whoPay.value === "Harry Use" 
+    document.getElementById('whoPay').onchange = async function() {
+        const cat = document.getElementById('category');
+        cat.disabled = false;
+        cat.innerHTML = "";
+        const opts = this.value === "Harry Use" 
             ? ["Harry Claim", "Harry Personal"] 
             : ["HS", "HSBC", "HS cheque", "HSBC cheque", "HSBC Credit Card"];
-        
-        opts.forEach(o => category.add(new Option(o, o)));
+        opts.forEach(o => cat.add(new Option(o, o)));
 
-        // 向 Google Script 拿最新編號
-        const sheetName = whoPay.value === "Harry Use" ? "工作表1" : "工作表2";
-        numDisplay.innerText = "讀取中...";
+        const sheetName = this.value === "Harry Use" ? "工作表1" : "工作表2";
+        document.getElementById('nextId').innerText = "讀取中...";
         try {
             const res = await fetch(`${SCRIPT_URL}?action=getCount&sheetName=${encodeURIComponent(sheetName)}`);
             const data = await res.json();
-            numDisplay.innerText = data.nextId;
-        } catch (e) {
-            numDisplay.innerText = "Error";
-        }
+            document.getElementById('nextId').innerText = data.nextId;
+        } catch (e) { document.getElementById('nextId').innerText = "Error"; }
     };
 
-    // 4. 提交表單
-    document.getElementById('expenseForm').onsubmit = async (e) => {
+    document.getElementById('mainForm').onsubmit = async (e) => {
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
-        const loader = document.getElementById('loading');
-        
         btn.disabled = true;
-        loader.style.display = "block";
+        btn.innerText = "處理中...";
 
-        const file = photo.files[0];
+        const file = document.getElementById('fileInput').files[0];
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = async () => {
             const payload = {
-                whoPay: whoPay.value,
-                category: category.value,
+                whoPay: document.getElementById('whoPay').value,
+                category: document.getElementById('category').value,
                 type: document.getElementById('type').value,
                 date: document.getElementById('date').value,
                 itemName: document.getElementById('itemName').value,
                 amount: document.getElementById('amount').value,
-                sheetName: whoPay.value === "Harry Use" ? "工作表1" : "工作表2",
+                sheetName: document.getElementById('whoPay').value === "Harry Use" ? "工作表1" : "工作表2",
                 image: reader.result.split(',')[1],
                 mimeType: file.type
             };
 
             try {
-                // 使用 no-cors 模式發送
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify(payload)
-                });
-                alert("上傳成功！");
+                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+                alert("✅ 成功！相片已命名並寫入 H 欄。");
                 location.reload();
             } catch (err) {
-                alert("錯誤：" + err);
+                alert("❌ 失敗: " + err);
                 btn.disabled = false;
-                loader.style.display = "none";
             }
         };
     };
