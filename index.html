@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Red 4.0 - 多功能上傳</title>
+    <title>Red 4.0 - 上傳系統</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; padding: 15px; font-family: -apple-system, sans-serif; }
         .card { border-radius: 15px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .btn-upload { font-size: 0.9rem; padding: 12px 5px; font-weight: bold; border-radius: 10px; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .btn-upload i { font-size: 1.5rem; margin-bottom: 5px; }
+        .btn-upload { font-size: 1rem; padding: 15px 5px; font-weight: bold; border-radius: 10px; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-upload:active { transform: scale(0.95); opacity: 0.8; }
+        .btn-upload span { font-size: 1.5rem; margin-bottom: 5px; }
         #preview { width: 100%; max-height: 250px; object-fit: contain; display: none; margin: 15px 0; border-radius: 10px; border: 1px solid #ddd; }
-        #fileStatus { display: none; background: #e9ecef; padding: 10px; border-radius: 10px; text-align: center; margin: 15px 0; font-size: 0.9rem; color: #495057; border: 1px dashed #adb5bd; }
+        #fileStatus { display: none; background: #e9ecef; padding: 12px; border-radius: 10px; text-align: center; margin: 15px 0; font-size: 0.9rem; color: #495057; border: 1px dashed #adb5bd; }
         .num-badge { background: #fff3cd; color: #856404; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; margin-bottom: 15px; border: 1px solid #ffeeba; }
         .header-title { color: #dc3545; font-weight: 800; text-align: center; margin-bottom: 20px; }
     </style>
@@ -24,19 +25,13 @@
         <form id="mainForm">
             
             <div class="row g-2 mb-3">
-                <div class="col-4">
+                <div class="col-6">
                     <label class="btn btn-outline-primary btn-upload w-100">
-                        <span>📷</span>即時拍照
-                        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
+                        <span>📸</span>拍照/上傳相片
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;">
                     </label>
                 </div>
-                <div class="col-4">
-                    <label class="btn btn-outline-info btn-upload w-100">
-                        <span>🖼️</span>相簿相片
-                        <input type="file" id="albumInput" accept="image/*" style="display: none;">
-                    </label>
-                </div>
-                <div class="col-4">
+                <div class="col-6">
                     <label class="btn btn-outline-success btn-upload w-100">
                         <span>📄</span>PDF 檔案
                         <input type="file" id="pdfInput" accept="application/pdf" style="display: none;">
@@ -103,7 +98,7 @@
 
     document.getElementById('date').valueAsDate = new Date();
 
-    // 統一處理檔案選擇
+    // 統一處理檔案選擇與預覽
     function handleFile(file, isImage) {
         selectedFile = file;
         const preview = document.getElementById('preview');
@@ -113,18 +108,19 @@
             status.style.display = 'none';
             preview.src = URL.createObjectURL(file);
             preview.style.display = 'block';
+            document.getElementById('pdfInput').value = ""; // 清空另一個
         } else {
             preview.style.display = 'none';
             status.innerText = "📄 已選取 PDF: " + file.name;
             status.style.display = 'block';
+            document.getElementById('imageInput').value = ""; // 清空另一個
         }
     }
 
-    document.getElementById('cameraInput').onchange = e => { if(e.target.files[0]) handleFile(e.target.files[0], true); };
-    document.getElementById('albumInput').onchange = e => { if(e.target.files[0]) handleFile(e.target.files[0], true); };
+    document.getElementById('imageInput').onchange = e => { if(e.target.files[0]) handleFile(e.target.files[0], true); };
     document.getElementById('pdfInput').onchange = e => { if(e.target.files[0]) handleFile(e.target.files[0], false); };
 
-    // 連動選單
+    // 連動選單與讀取編號
     document.getElementById('whoPay').onchange = async function() {
         const cat = document.getElementById('category');
         cat.disabled = false;
@@ -143,14 +139,14 @@
         } catch (e) { document.getElementById('nextId').innerText = "Error"; }
     };
 
-    // 提交表單
+    // 提交
     document.getElementById('mainForm').onsubmit = async (e) => {
         e.preventDefault();
-        if (!selectedFile) return alert("請先選擇拍照、相片或 PDF！");
+        if (!selectedFile) return alert("請先選擇相片或 PDF！");
 
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
-        btn.innerText = "正在處理中...";
+        btn.innerText = "處理中...";
 
         const reader = new FileReader();
         reader.readAsDataURL(selectedFile);
