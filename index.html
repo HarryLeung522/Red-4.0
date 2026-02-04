@@ -3,45 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Red 4.0 - 拍照/PDF上傳</title>
+    <title>Red 4.0 - 多功能上傳</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fa; padding: 15px; }
-        .card { border-radius: 15px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .btn-upload { padding: 15px; font-weight: bold; margin-bottom: 10px; border-radius: 10px; }
-        #preview { width: 100%; max-height: 200px; object-fit: contain; display: none; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; }
-        #pdfNote { display: none; background: #e9ecef; padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 15px; color: #495057; }
-        .num-badge { background: #fff3cd; color: #856404; padding: 8px; text-align: center; border-radius: 8px; font-weight: bold; margin-bottom: 15px; }
+        body { background-color: #f8f9fa; padding: 15px; font-family: -apple-system, sans-serif; }
+        .card { border-radius: 15px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .btn-upload { font-size: 0.9rem; padding: 12px 5px; font-weight: bold; border-radius: 10px; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .btn-upload i { font-size: 1.5rem; margin-bottom: 5px; }
+        #preview { width: 100%; max-height: 250px; object-fit: contain; display: none; margin: 15px 0; border-radius: 10px; border: 1px solid #ddd; }
+        #fileStatus { display: none; background: #e9ecef; padding: 10px; border-radius: 10px; text-align: center; margin: 15px 0; font-size: 0.9rem; color: #495057; border: 1px dashed #adb5bd; }
+        .num-badge { background: #fff3cd; color: #856404; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; margin-bottom: 15px; border: 1px solid #ffeeba; }
+        .header-title { color: #dc3545; font-weight: 800; text-align: center; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2 class="text-center my-3 fw-bold" style="color: #dc3545;">Red 4.0</h2>
+<div class="container mt-2">
+    <h1 class="header-title">Red 4.0</h1>
     <div class="card p-4">
         <form id="mainForm">
             
             <div class="row g-2 mb-3">
-                <div class="col-6">
+                <div class="col-4">
                     <label class="btn btn-outline-primary btn-upload w-100">
-                        📸 即時拍照
+                        <span>📷</span>即時拍照
                         <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
                     </label>
                 </div>
-                <div class="col-6">
+                <div class="col-4">
+                    <label class="btn btn-outline-info btn-upload w-100">
+                        <span>🖼️</span>相簿相片
+                        <input type="file" id="albumInput" accept="image/*" style="display: none;">
+                    </label>
+                </div>
+                <div class="col-4">
                     <label class="btn btn-outline-success btn-upload w-100">
-                        📄 上傳 PDF
+                        <span>📄</span>PDF 檔案
                         <input type="file" id="pdfInput" accept="application/pdf" style="display: none;">
                     </label>
                 </div>
             </div>
 
             <img id="preview">
-            <div id="pdfNote">已選取 PDF 檔案</div>
+            <div id="fileStatus"></div>
 
             <div class="mb-3">
                 <label class="form-label fw-bold">Who pay</label>
-                <select class="form-select" id="whoPay" required>
+                <select class="form-select form-select-lg" id="whoPay" required>
                     <option value="" disabled selected>請選擇...</option>
                     <option value="Harry Use">Harry Use</option>
                     <option value="Pi Direct payment">Pi Direct payment</option>
@@ -50,7 +58,7 @@
 
             <div class="mb-3">
                 <label class="form-label fw-bold">類別 / 支付方式</label>
-                <select class="form-select" id="category" disabled required></select>
+                <select class="form-select form-select-lg" id="category" disabled required></select>
             </div>
 
             <div class="mb-3">
@@ -67,15 +75,24 @@
             </div>
 
             <div class="row">
-                <div class="col-6 mb-3"><label class="form-label fw-bold">Date</label><input type="date" class="form-control" id="date" required></div>
-                <div class="col-6 mb-3"><label class="form-label fw-bold">Amount</label><input type="number" step="0.01" class="form-control" id="amount" required></div>
+                <div class="col-6 mb-3">
+                    <label class="form-label fw-bold">Date</label>
+                    <input type="date" class="form-control" id="date" required>
+                </div>
+                <div class="col-6 mb-3">
+                    <label class="form-label fw-bold">Amount</label>
+                    <input type="number" step="0.01" class="form-control" id="amount" placeholder="0.00" required>
+                </div>
             </div>
 
-            <div class="mb-3"><label class="form-label fw-bold">Item Name</label><input type="text" class="form-control" id="itemName" required></div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Item Name</label>
+                <input type="text" class="form-control" id="itemName" placeholder="請輸入項目名稱" required>
+            </div>
 
-            <div class="num-badge">正在填寫編號：<span id="nextId">--</span></div>
+            <div class="num-badge">系統編號預覽：<span id="nextId">--</span></div>
 
-            <button type="submit" id="submitBtn" class="btn btn-danger w-100 py-2 fw-bold">確認傳送</button>
+            <button type="submit" id="submitBtn" class="btn btn-danger w-100 py-3 fw-bold">確認並傳送資料</button>
         </form>
     </div>
 </div>
@@ -86,29 +103,28 @@
 
     document.getElementById('date').valueAsDate = new Date();
 
-    // 處理拍照
-    document.getElementById('cameraInput').onchange = e => {
-        selectedFile = e.target.files[0];
-        if (selectedFile) {
-            document.getElementById('pdfInput').value = ""; // 清空另一個 input
-            document.getElementById('pdfNote').style.display = 'none';
-            document.getElementById('preview').src = URL.createObjectURL(selectedFile);
-            document.getElementById('preview').style.display = 'block';
+    // 統一處理檔案選擇
+    function handleFile(file, isImage) {
+        selectedFile = file;
+        const preview = document.getElementById('preview');
+        const status = document.getElementById('fileStatus');
+        
+        if (isImage) {
+            status.style.display = 'none';
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+            status.innerText = "📄 已選取 PDF: " + file.name;
+            status.style.display = 'block';
         }
-    };
+    }
 
-    // 處理 PDF 上傳
-    document.getElementById('pdfInput').onchange = e => {
-        selectedFile = e.target.files[0];
-        if (selectedFile) {
-            document.getElementById('cameraInput').value = ""; // 清空另一個 input
-            document.getElementById('preview').style.display = 'none';
-            document.getElementById('pdfNote').style.display = 'block';
-            document.getElementById('pdfNote').innerText = "📄 已選取: " + selectedFile.name;
-        }
-    };
+    document.getElementById('cameraInput').onchange = e => { if(e.target.files[0]) handleFile(e.target.files[0], true); };
+    document.getElementById('albumInput').onchange = e => { if(e.target.files[0]) handleFile(e.target.files[0], true); };
+    document.getElementById('pdfInput').onchange = e => { if(e.target.files[0]) handleFile(e.target.files[0], false); };
 
-    // 連動選單與編號
+    // 連動選單
     document.getElementById('whoPay').onchange = async function() {
         const cat = document.getElementById('category');
         cat.disabled = false;
@@ -127,14 +143,14 @@
         } catch (e) { document.getElementById('nextId').innerText = "Error"; }
     };
 
-    // 提交
+    // 提交表單
     document.getElementById('mainForm').onsubmit = async (e) => {
         e.preventDefault();
-        if (!selectedFile) return alert("請先拍照或選擇 PDF！");
+        if (!selectedFile) return alert("請先選擇拍照、相片或 PDF！");
 
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
-        btn.innerText = "上傳中...";
+        btn.innerText = "正在處理中...";
 
         const reader = new FileReader();
         reader.readAsDataURL(selectedFile);
@@ -146,18 +162,19 @@
                 date: document.getElementById('date').value,
                 itemName: document.getElementById('itemName').value,
                 amount: document.getElementById('amount').value,
-                sheetName: document.getElementById('whoPay').value === "Harry Use" ? "工作表1" : "工作表2",
-                image: reader.result.split(',')[1], // 這是 base64 內容
+                sheetName: (document.getElementById('whoPay').value === "Harry Use") ? "工作表1" : "工作表2",
+                image: reader.result.split(',')[1],
                 mimeType: selectedFile.type
             };
 
             try {
                 await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                alert("✅ 上傳成功！檔案已存入 Drive。");
+                alert("✅ 上傳成功！");
                 location.reload();
             } catch (err) {
                 alert("❌ 失敗: " + err);
                 btn.disabled = false;
+                btn.innerText = "確認並傳送資料";
             }
         };
     };
