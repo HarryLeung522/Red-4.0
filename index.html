@@ -1,178 +1,326 @@
-<!DOCTYPE html>
-<html lang="zh-HK">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Red 4.0 - 上傳系統</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background-color: #f8f9fa; padding: 15px; font-family: -apple-system, sans-serif; }
-        .card { border-radius: 15px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .btn-upload { font-size: 1rem; padding: 15px 5px; font-weight: bold; border-radius: 10px; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.2s; }
-        .btn-upload:active { transform: scale(0.95); opacity: 0.8; }
-        .btn-upload span { font-size: 1.5rem; margin-bottom: 5px; }
-        #preview { width: 100%; max-height: 250px; object-fit: contain; display: none; margin: 15px 0; border-radius: 10px; border: 1px solid #ddd; }
-        #fileStatus { display: none; background: #e9ecef; padding: 12px; border-radius: 10px; text-align: center; margin: 15px 0; font-size: 0.9rem; color: #495057; border: 1px dashed #adb5bd; }
-        .num-badge { background: #fff3cd; color: #856404; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; margin-bottom: 15px; border: 1px solid #ffeeba; }
-        .header-title { color: #dc3545; font-weight: 800; text-align: center; margin-bottom: 20px; }
-    </style>
+
+
+
+    
+    
+    Red 4.0 - 批量上傳系統
+    
+    
+        body { background-color: #f8f9fa; padding: 10px; font-family: -apple-system, sans-serif; }
+        .card-main { border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: #fff; padding: 15px; }
+        .header-title { color: #dc3545; font-weight: 800; text-align: center; margin-bottom: 15px; font-size: 1.5rem; }
+        
+<pre><code>    /* Table Matrix specific styles */
+    .table-responsive { border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 15px; }
+    .table { margin-bottom: 0; white-space: nowrap; font-size: 0.9rem; }
+    .table th { background-color: #f1f3f5; font-weight: bold; color: #495057; text-align: center; }
+    .table td { vertical-align: middle; padding: 8px; }
+    .table tfoot th { background-color: #e9ecef; }
+    
+    /* Compact File Button */
+    .file-btn { width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: 0.2s; }
+    .file-btn.attached { background-color: #198754; color: white; border-color: #198754; }
+    
+    /* Set minimum widths so columns don&#39;t crush on mobile */
+    .col-file { min-width: 110px; }
+    .col-whopay { min-width: 140px; }
+    .col-cat { min-width: 150px; }
+    .col-type { min-width: 120px; }
+    .col-date { min-width: 130px; }
+    .col-amount { min-width: 110px; }
+    .col-name { min-width: 180px; }
+    .col-action { min-width: 50px; text-align: center; }
+    
+    .batch-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .mobile-hint { font-size: 0.8rem; color: #6c757d; text-align: center; margin-bottom: 10px; display: none; }
+    @media (max-width: 768px) { .mobile-hint { display: block; } }
+&lt;/style&gt;
+</code></pre>
 </head>
 <body>
 
-<div class="container mt-2">
+<div class="container-fluid mt-2">
     <h1 class="header-title">Red 4.0</h1>
-    <div class="card p-4">
+    <div class="card-main">
         <form id="mainForm">
             
-            <div class="row g-2 mb-3">
-                <div class="col-6">
-                    <label class="btn btn-outline-primary btn-upload w-100">
-                        <span>📸</span>拍照/上傳相片
-                        <input type="file" id="imageInput" accept="image/*" style="display: none;">
-                    </label>
-                </div>
-                <div class="col-6">
-                    <label class="btn btn-outline-success btn-upload w-100">
-                        <span>📄</span>PDF 檔案
-                        <input type="file" id="pdfInput" accept="application/pdf" style="display: none;">
-                    </label>
-                </div>
-            </div>
+<pre><code>        &lt;div class=&quot;batch-header&quot;&gt;
+            &lt;h5 class=&quot;mb-0 fw-bold fs-6&quot;&gt;🧾 批量單據 (Matrix Mode)&lt;/h5&gt;
+            &lt;button type=&quot;button&quot; class=&quot;btn btn-sm btn-outline-primary fw-bold&quot; id=&quot;addBtn&quot; onclick=&quot;addRow()&quot;&gt;+ 新增行 (1/10)&lt;/button&gt;
+        &lt;/div&gt;
+        
+        &lt;div class=&quot;mobile-hint&quot;&gt;👉 左右滑動表格以填寫完整資料&lt;/div&gt;
 
-            <img id="preview">
-            <div id="fileStatus"></div>
+        &lt;div class=&quot;table-responsive&quot;&gt;
+            &lt;table class=&quot;table table-bordered table-hover&quot;&gt;
+                &lt;thead&gt;
+                    &lt;tr&gt;
+                        &lt;th class=&quot;col-file&quot;&gt;檔案附件&lt;/th&gt;
+                        &lt;th class=&quot;col-whopay&quot;&gt;Who Pay&lt;/th&gt;
+                        &lt;th class=&quot;col-cat&quot;&gt;類別/支付方式&lt;/th&gt;
+                        &lt;th class=&quot;col-type&quot;&gt;Type&lt;/th&gt;
+                        &lt;th class=&quot;col-date&quot;&gt;Date&lt;/th&gt;
+                        &lt;th class=&quot;col-amount&quot;&gt;Amount&lt;/th&gt;
+                        &lt;th class=&quot;col-name&quot;&gt;Item Name&lt;/th&gt;
+                        &lt;th class=&quot;col-action&quot;&gt;刪除&lt;/th&gt;
+                    &lt;/tr&gt;
+                &lt;/thead&gt;
+                &lt;tbody id=&quot;itemsContainer&quot;&gt;
+                    &lt;/tbody&gt;
+                &lt;tfoot&gt;
+                    &lt;tr&gt;
+                        &lt;th colspan=&quot;5&quot; class=&quot;text-end align-middle fs-6&quot;&gt;總金額 (Total):&lt;/th&gt;
+                        &lt;th class=&quot;text-danger fs-6 fw-bold align-middle&quot;&gt;
+                            $&lt;span id=&quot;totalAmount&quot;&gt;0.00&lt;/span&gt;
+                        &lt;/th&gt;
+                        &lt;th colspan=&quot;2&quot;&gt;&lt;/th&gt;
+                    &lt;/tr&gt;
+                &lt;/tfoot&gt;
+            &lt;/table&gt;
+        &lt;/div&gt;
 
-            <div class="mb-3">
-                <label class="form-label fw-bold">Who pay</label>
-                <select class="form-select form-select-lg" id="whoPay" required>
-                    <option value="" disabled selected>請選擇...</option>
-                    <option value="Harry Use">Harry Use</option>
-                    <option value="Pi Direct payment">Pi Direct payment</option>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold">類別 / 支付方式</label>
-                <select class="form-select form-select-lg" id="category" disabled required></select>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold">Type</label>
-                <select class="form-select" id="type" required>
-                    <option value="Rent">Rent</option>
-                    <option value="Electricity">Electricity</option>
-                    <option value="Logistic">Logistic</option>
-                    <option value="Teaching Material">Teaching Material</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Assets">Assets</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
-
-            <div class="row">
-                <div class="col-6 mb-3">
-                    <label class="form-label fw-bold">Date</label>
-                    <input type="date" class="form-control" id="date" required>
-                </div>
-                <div class="col-6 mb-3">
-                    <label class="form-label fw-bold">Amount</label>
-                    <input type="number" step="0.01" class="form-control" id="amount" placeholder="0.00" required>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold">Item Name</label>
-                <input type="text" class="form-control" id="itemName" placeholder="請輸入項目名稱" required>
-            </div>
-
-            <div class="num-badge">系統編號預覽：<span id="nextId">--</span></div>
-
-            <button type="submit" id="submitBtn" class="btn btn-danger w-100 py-3 fw-bold">確認並傳送資料</button>
-        </form>
-    </div>
+        &lt;button type=&quot;submit&quot; id=&quot;submitBtn&quot; class=&quot;btn btn-danger w-100 py-2 fw-bold fs-6 mt-2&quot;&gt;確認並傳送全部資料&lt;/button&gt;
+    &lt;/form&gt;
+&lt;/div&gt;
+</code></pre>
 </div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8hdxwUDSs6z75MawUTU1qb70PyrY6WvLkGGIPAfAdPjggSdchWvYjugBsDR7VOiCMCg/exec";
-    let selectedFile = null;
+    let itemCount = 0;
+    const MAX_ITEMS = 10;
+    let rowIdCounter = 0;
 
-    document.getElementById('date').valueAsDate = new Date();
+    // Initialize first row on load
+    document.addEventListener("DOMContentLoaded", () => { addRow(); });
 
-    // 統一處理檔案選擇與預覽
-    function handleFile(file, isImage) {
-        selectedFile = file;
-        const preview = document.getElementById('preview');
-        const status = document.getElementById('fileStatus');
+    function addRow() {
+        if (itemCount >= MAX_ITEMS) {
+            alert(`最多只能新增 ${MAX_ITEMS} 筆！`);
+            return;
+        }
         
-        if (isImage) {
-            status.style.display = 'none';
-            preview.src = URL.createObjectURL(file);
-            preview.style.display = 'block';
-            document.getElementById('pdfInput').value = ""; // 清空另一個
-        } else {
-            preview.style.display = 'none';
-            status.innerText = "📄 已選取 PDF: " + file.name;
-            status.style.display = 'block';
-            document.getElementById('imageInput').value = ""; // 清空另一個
+        itemCount++;
+        rowIdCounter++;
+        const tbody = document.getElementById('itemsContainer');
+        const rowId = 'tr-' + rowIdCounter;
+        const defaultDate = new Date().toISOString().split('T')[0];
+        
+        const tr = document.createElement('tr');
+        tr.id = rowId;
+        tr.innerHTML = `
+            <td>
+                <label class="btn btn-sm btn-outline-primary file-btn mb-0 w-100" title="點擊上傳相片或 PDF">
+                    <span class="file-icon">📎</span> <span class="file-text">Attach</span>
+                    <input type="file" class="file-input" accept="image/*,application/pdf" style="display: none;">
+                </label>
+            </td>
+            <td>
+                <select class="form-select form-select-sm who-pay-input" required>
+                    <option value="Harry Use" selected>Harry Use</option>
+                    <option value="Pi Direct payment">Pi Direct payment</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-select form-select-sm category-input" required>
+                    <option value="Harry Claim" selected>Harry Claim</option>
+                    <option value="Harry Personal">Harry Personal</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-select form-select-sm type-input" required>
+                    <option value="Rent">Rent</option>
+                    <option value="Electricity">Electricity</option>
+                    <option value="Logistic">Logistic</option>
+                    <option value="Teaching Material">Teaching Material</option>
+                    <option value="Admin" selected>Admin</option>
+                    <option value="Assets">Assets</option>
+                    <option value="Parking">Parking</option>
+                    <option value="Dinning">Dinning</option>
+                    <option value="Other">Other</option>
+                </select>
+            </td>
+            <td>
+                <input type="date" class="form-control form-control-sm date-input" value="${defaultDate}" required>
+            </td>
+            <td>
+                <input type="number" step="0.01" class="form-control form-control-sm amount-input" placeholder="0.00" required>
+            </td>
+            <td>
+                <input type="text" class="form-control form-control-sm name-input" placeholder="名稱" value="-" required>
+            </td>
+            <td class="col-action">
+                ${itemCount > 1 ? `<button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="removeRow('${rowId}')">❌</button>` : ''}
+            </td>
+        `;
+        tbody.appendChild(tr);
+        updateAddButton();
+        calculateTotal();
+    }
+
+    function removeRow(rowId) {
+        const row = document.getElementById(rowId);
+        if (row) { 
+            row.remove(); 
+            itemCount--; 
+            updateAddButton(); 
+            calculateTotal(); // Recalculate when a row is removed
         }
     }
 
-    document.getElementById('imageInput').onchange = e => { if(e.target.files[0]) handleFile(e.target.files[0], true); };
-    document.getElementById('pdfInput').onchange = e => { if(e.target.files[0]) handleFile(e.target.files[0], false); };
+    function updateAddButton() {
+        const btn = document.getElementById('addBtn');
+        btn.innerText = `+ 新增行 (${itemCount}/${MAX_ITEMS})`;
+        btn.disabled = itemCount >= MAX_ITEMS;
+    }
 
-    // 連動選單與讀取編號
-    document.getElementById('whoPay').onchange = async function() {
-        const cat = document.getElementById('category');
-        cat.disabled = false;
-        cat.innerHTML = "";
-        const opts = this.value === "Harry Use" 
-            ? ["Harry Claim", "Harry Personal"] 
-            : ["HS", "HSBC", "HS cheque", "HSBC cheque", "HSBC Credit Card"];
-        opts.forEach(o => cat.add(new Option(o, o)));
+    // Calculate Total Amount
+    function calculateTotal() {
+        let total = 0;
+        const amountInputs = document.querySelectorAll('.amount-input');
+        amountInputs.forEach(input => {
+            const val = parseFloat(input.value);
+            if (!isNaN(val)) {
+                total += val;
+            }
+        });
+        document.getElementById('totalAmount').innerText = total.toFixed(2);
+    }
 
-        const sheetName = this.value === "Harry Use" ? "工作表1" : "工作表2";
-        document.getElementById('nextId').innerText = "讀取中...";
-        try {
-            const res = await fetch(`${SCRIPT_URL}?action=getCount&sheetName=${encodeURIComponent(sheetName)}`);
-            const data = await res.json();
-            document.getElementById('nextId').innerText = data.nextId;
-        } catch (e) { document.getElementById('nextId').innerText = "Error"; }
-    };
+    // Handle interactions inside the table matrix
+    document.getElementById('itemsContainer').addEventListener('change', function(e) {
+        const row = e.target.closest('tr');
+        if (!row) return;
 
-    // 提交
+        // Handle File Selection directly within the row
+        if (e.target.classList.contains('file-input')) {
+            const file = e.target.files[0];
+            const labelBtn = row.querySelector('.file-btn');
+            const fileText = row.querySelector('.file-text');
+            const fileIcon = row.querySelector('.file-icon');
+
+            if (file) {
+                row.fileData = file; // Store file data on the row element
+                labelBtn.classList.add('attached');
+                labelBtn.classList.remove('btn-outline-primary');
+                fileIcon.innerText = "✅";
+                // Shorten filename to keep matrix clean
+                let shortName = file.name;
+                if (shortName.length > 8) shortName = shortName.substring(0, 8) + '...';
+                fileText.innerText = shortName;
+            } else {
+                row.fileData = null;
+                labelBtn.classList.remove('attached');
+                labelBtn.classList.add('btn-outline-primary');
+                fileIcon.innerText = "📎";
+                fileText.innerText = "Attach";
+            }
+        }
+
+        // Handle Who Pay -> Category link
+        if (e.target.classList.contains('who-pay-input')) {
+            const cat = row.querySelector('.category-input');
+            cat.disabled = false;
+            cat.innerHTML = "";
+            const opts = e.target.value === "Harry Use" 
+                ? ["Harry Claim", "Harry Personal"] 
+                : ["HS", "HSBC", "HS cheque", "HSBC cheque", "HSBC Credit Card"];
+            opts.forEach(o => cat.add(new Option(o, o)));
+            
+            // Set explicit default for Harry Use when switched back
+            if (e.target.value === "Harry Use") {
+                cat.value = "Harry Claim";
+            }
+        }
+    });
+
+    // Listen for input events specifically for the calculator
+    document.getElementById('itemsContainer').addEventListener('input', function(e) {
+        if (e.target.classList.contains('amount-input')) {
+            calculateTotal();
+        }
+    });
+
+    // Helper to read files
+    function getBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    // Submit Form Data
     document.getElementById('mainForm').onsubmit = async (e) => {
         e.preventDefault();
-        if (!selectedFile) return alert("請先選擇相片或 PDF！");
+        
+        const itemRows = document.querySelectorAll('#itemsContainer tr');
+        const itemsToSubmit = [];
+
+        // Validate and gather all data
+        for (let i = 0; i < itemRows.length; i++) {
+            const row = itemRows[i];
+            const file = row.fileData;
+            
+            if (!file) {
+                alert(`第 ${i+1} 行尚未上傳附件！請點擊 📎 Attach 上傳。`);
+                return; // Stop submission
+            }
+
+            const whoPayVal = row.querySelector('.who-pay-input').value;
+            itemsToSubmit.push({
+                file: file,
+                whoPay: whoPayVal,
+                category: row.querySelector('.category-input').value,
+                sheetName: (whoPayVal === "Harry Use") ? "工作表1" : "工作表2",
+                type: row.querySelector('.type-input').value,
+                date: row.querySelector('.date-input').value,
+                amount: row.querySelector('.amount-input').value,
+                itemName: row.querySelector('.name-input').value
+            });
+        }
 
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
-        btn.innerText = "處理中...";
+        let successCount = 0;
 
-        const reader = new FileReader();
-        reader.readAsDataURL(selectedFile);
-        reader.onload = async () => {
-            const payload = {
-                whoPay: document.getElementById('whoPay').value,
-                category: document.getElementById('category').value,
-                type: document.getElementById('type').value,
-                date: document.getElementById('date').value,
-                itemName: document.getElementById('itemName').value,
-                amount: document.getElementById('amount').value,
-                sheetName: (document.getElementById('whoPay').value === "Harry Use") ? "工作表1" : "工作表2",
-                image: reader.result.split(',')[1],
-                mimeType: selectedFile.type
-            };
-
+        // Submit API calls sequentially
+        for (let i = 0; i < itemsToSubmit.length; i++) {
+            btn.innerText = `⏳ 傳送中... (${i + 1}/${itemsToSubmit.length})`;
+            const item = itemsToSubmit[i];
+            
             try {
-                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                alert("✅ 上傳成功！");
-                location.reload();
+                const base64File = await getBase64(item.file);
+                const payload = {
+                    whoPay: item.whoPay,
+                    category: item.category,
+                    sheetName: item.sheetName,
+                    image: base64File,
+                    mimeType: item.file.type,
+                    type: item.type,
+                    date: item.date,
+                    itemName: item.itemName,
+                    amount: item.amount
+                };
+
+                await fetch(SCRIPT_URL, { 
+                    method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) 
+                });
+                successCount++;
             } catch (err) {
-                alert("❌ 失敗: " + err);
-                btn.disabled = false;
-                btn.innerText = "確認並傳送資料";
+                console.error(`第 ${i + 1} 筆上傳失敗:`, err);
             }
-        };
+        }
+
+        if (successCount === itemsToSubmit.length) {
+            alert(`✅ 成功上傳 ${successCount} 筆資料！\n總金額：$${document.getElementById('totalAmount').innerText}`);
+            location.reload();
+        } else {
+            alert(`⚠️ 上傳完成，但有 ${itemsToSubmit.length - successCount} 筆失敗，請檢查網路連線。`);
+            btn.disabled = false;
+            btn.innerText = "重新傳送失敗項目";
+        }
     };
 </script>
 </body>
