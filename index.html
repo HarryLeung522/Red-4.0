@@ -28,6 +28,7 @@
         .col-type { min-width: 120px; }
         .col-date { min-width: 130px; }
         .col-amount { min-width: 110px; }
+        .col-id { min-width: 110px; text-align: center; } /* 新增編號欄位寬度 */
         .col-name { min-width: 180px; }
         .col-action { min-width: 50px; text-align: center; }
         
@@ -60,7 +61,7 @@
                             <th class="col-type">Type</th>
                             <th class="col-date">Date</th>
                             <th class="col-amount">Amount</th>
-                            <th class="col-name">Item Name</th>
+                            <th class="col-id">預覽編號</th> <th class="col-name">Item Name</th>
                             <th class="col-action">刪除</th>
                         </tr>
                     </thead>
@@ -72,8 +73,7 @@
                             <th class="text-danger fs-6 fw-bold align-middle">
                                 $<span id="totalAmount">0.00</span>
                             </th>
-                            <th colspan="2"></th>
-                        </tr>
+                            <th colspan="3"></th> </tr>
                     </tfoot>
                 </table>
             </div>
@@ -88,9 +88,72 @@
     let itemCount = 0;
     const MAX_ITEMS = 10;
     let rowIdCounter = 0;
+    
+    // 儲存從 Google Sheet 獲取的基礎編號
+    let baseSheetIds = { "工作表1": null, "工作表2": null };
 
-    // Initialize first row on load
-    document.addEventListener("DOMContentLoaded", () => { addRow(); });
+    // Initialize first row on load & Fetch IDs
+    document.addEventListener("DOMContentLoaded", () => { 
+        addRow(); 
+        fetchBaseIds();
+    });
+
+    // 異步獲取兩個工作表的最新編號
+    async function fetchBaseIds() {
+        try {
+            const [res1, res2] = await Promise.all([
+                fetch(`${SCRIPT_URL}?action=getCount&sheetName=${encodeURIComponent('工作表1')}`),
+                fetch(`${SCRIPT_URL}?action=getCount&sheetName=${encodeURIComponent('工作表2')}`)
+            ]);
+            const data1 = await res1.json();
+            const data2 = await res2.json();
+            
+            baseSheetIds["工作表1"] = data1.nextId;
+            baseSheetIds["工作表2"] = data2.nextId;
+            
+            recalculateIds(); // 獲取完成後更新所有行的編號
+        } catch (error) {
+            console.error("無法獲取編號:", error);
+            document.querySelectorAll('.id-preview').forEach(el => el.innerText = "Error");
+        }
+    }
+
+    // 智能推算下一個編號 (支援結尾是數字的字串，例如 RED-005 -> RED-006)
+    function incrementIdStr(idStr, addAmount) {
+        if (!idStr) return "--";
+        if (addAmount === 0) return idStr;
+        let match = idStr.toString().match(/^(.*?)(\d+)$/);
+        if (match) {
+            let prefix = match[1];
+            let numStr = match[2];
+            let num = parseInt(numStr, 10) + addAmount;
+            let newNumStr = num.toString().padStart(numStr.length, '0');
+            return prefix + newNumStr;
+        }
+        return idStr + "(+" + addAmount + ")";
+    }
+
+    // 重新計算清單中所有預覽編號
+    function recalculateIds() {
+        let counters = { "工作表1": 0, "工作表2": 0 };
+        const rows = document.querySelectorAll('#itemsContainer tr');
+        
+        rows.forEach(row => {
+            const whoPay = row.querySelector('.who-pay-input').value;
+            const sheetName = (whoPay === "Harry Use") ? "工作表1" : "工作表2";
+            const badge = row.querySelector('.id-preview');
+            
+            if (baseSheetIds[sheetName] === null) {
+                badge.innerText = "讀取中...";
+                badge.className = "badge bg-warning text-dark id-preview w-100 py-2";
+            } else {
+                const currentId = incrementIdStr(baseSheetIds[sheetName], counters[sheetName]);
+                badge.innerText = currentId;
+                badge.className = "badge bg-info text-dark id-preview w-100 py-2";
+                counters[sheetName]++; // 為下一個同行工作表的項目加 1
+            }
+        });
+    }
 
     function addRow() {
         if (itemCount >= MAX_ITEMS) {
@@ -144,6 +207,9 @@
             <td>
                 <input type="number" step="0.01" class="form-control form-control-sm amount-input" placeholder="0.00" required>
             </td>
+            <td class="text-center">
+                <span class="badge bg-warning text-dark id-preview w-100 py-2">讀取中...</span>
+            </td>
             <td>
                 <input type="text" class="form-control form-control-sm name-input" placeholder="名稱" value="-" required>
             </td>
@@ -154,6 +220,7 @@
         tbody.appendChild(tr);
         updateAddButton();
         calculateTotal();
+        recalculateIds(); // 新增行時重新推算編號
     }
 
     function removeRow(rowId) {
@@ -162,7 +229,8 @@
             row.remove(); 
             itemCount--; 
             updateAddButton(); 
-            calculateTotal(); // Recalculate when a row is removed
+            calculateTotal(); 
+            recalculateIds(); // 移除行時重新推算編號，確保序號連續
         }
     }
 
@@ -215,7 +283,7 @@
             }
         }
 
-        // Handle Who Pay -> Category link
+        // Handle Who Pay -> Category link & Recalculate IDs
         if (e.target.classList.contains('who-pay-input')) {
             const cat = row.querySelector('.category-input');
             cat.disabled = false;
@@ -229,6 +297,8 @@
             if (e.target.value === "Harry Use") {
                 cat.value = "Harry Claim";
             }
+            
+            recalculateIds(); // 切換 Who Pay 會影響歸屬的工作表，因此重新推算全表編號
         }
     });
 
